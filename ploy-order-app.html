@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLOY GARMENT – ระบบสร้างใบสั่งผลิต</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f4f5f7; --panel:#ffffff; --ink:#1f2328; --muted:#6b7280;
+    --line:#d8dce1; --line2:#e8ebee; --brand:#111827; --accent:#2563eb;
+    --accent2:#0ea5e9; --ok:#16a34a; --warn:#d97706; --soft:#f0f3f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+  h1,h2,h3,h4{margin:0;font-weight:700}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:14px}
+  .topbar{background:var(--brand);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50}
+  .topbar .logo{border:2px solid #fff;border-radius:6px;padding:4px 10px;font-weight:800;letter-spacing:1px;font-size:13px;line-height:1.1}
+  .topbar .title{font-size:16px;font-weight:700}
+  .topbar .sub{font-size:12px;color:#cbd2dc}
+  .topbar .spacer{flex:1}
+  .topbar button{background:#fff;color:#111827;border:0;border-radius:7px;padding:8px 14px;font-weight:700;font-size:13px}
+  .topbar button.ghost{background:transparent;color:#fff;border:1px solid #4b5563}
+  .wrap{display:grid;grid-template-columns:minmax(420px,560px) 1fr;gap:18px;padding:18px;align-items:start}
+  @media(max-width:1100px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .panel h2{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .panel h2 .num{background:var(--accent);color:#fff;width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+  .section-card{position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto}
+  label.fld{display:block;margin:10px 0 4px;font-weight:600;font-size:13px;color:#374151}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  input[type=text],input[type=date],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  textarea{resize:vertical}
+  .hint{color:var(--muted);font-size:12px;margin-top:3px}
+  .pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .pill{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;background:#fff;color:#374151}
+  .pill input{display:none}
+  .pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .drop{border:2px dashed var(--line);border-radius:10px;padding:18px;text-align:center;color:var(--muted);background:var(--soft);cursor:pointer}
+  .drop.drag{border-color:var(--accent);background:#eef4ff}
+  .drop img{max-width:100%;max-height:220px;border-radius:8px;margin-top:8px}
+  .toolbtn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700}
+  .toolbtn.sec{background:#eef2f7;color:#1f2937}
+  .toolbtn.ok{background:var(--ok)}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .qty-table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+  .qty-table th,.qty-table td{border:1px solid var(--line);padding:4px;text-align:center}
+  .qty-table th{background:var(--soft)}
+  .qty-table input{border:0;text-align:center;padding:4px;width:100%;background:transparent}
+  .qty-table .lbl input{text-align:left}
+  .mini{background:#eef2f7;border:0;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700}
+  .job{border:1px solid var(--line2);border-radius:8px;padding:10px;margin-top:8px;background:#fbfcfe}
+  .job .jhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .job .x{color:#b91c1c;background:#fee2e2;border:0;border-radius:6px;padding:2px 8px;font-weight:700}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:8px;z-index:200;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .sheetwrap{display:flex;justify-content:center}
+  .sheet{background:#fff;width:794px;min-height:1123px;padding:34px;border:1px solid var(--line);color:#111;font-size:13px}
+  .sheet *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .s-head{display:flex;align-items:flex-start;gap:14px}
+  .s-logo{border:2px solid #111;border-radius:6px;width:96px;height:58px;display:flex;align-items:center;justify-content:center;font-weight:800;text-align:center;font-size:13px;line-height:1.1}
+  .s-title .th{font-size:21px;font-weight:700}
+  .s-title .en{font-size:14px;color:#333;font-weight:700}
+  .s-meta{margin-left:auto;border:1px solid #111}
+  .s-meta div{display:flex;border-bottom:1px solid #111;font-size:12px}
+  .s-meta div:last-child{border-bottom:0}
+  .s-meta .k{padding:4px 8px;border-right:1px solid #111;background:#f3f4f6;white-space:nowrap;font-weight:700}
+  .s-meta .v{padding:4px 14px;min-width:90px}
+  .blk{border:1px solid #111;margin-top:12px}
+  .blk-h{background:#111;color:#fff;font-weight:700;padding:5px 10px;font-size:13px}
+  .blk-b{padding:10px 12px}
+  .drow{display:flex;padding:2px 0}
+  .drow .dk{width:170px;font-weight:600}
+  .drow .dc{width:14px}
+  .mockimg{border:1px dashed #999;border-radius:6px;min-height:230px;display:flex;align-items:center;justify-content:center;color:#999;overflow:hidden}
+  .mockimg img{max-width:100%;max-height:380px}
+  .s-qty{width:100%;border-collapse:collapse;font-size:12px}
+  .s-qty th,.s-qty td{border:1px solid #111;padding:5px;text-align:center}
+  .s-qty th{background:#f3f4f6}
+  .s-jobs{width:100%;border-collapse:collapse;font-size:12px}
+  .s-jobs th,.s-jobs td{border:1px solid #111;padding:5px 7px;text-align:left;vertical-align:top}
+  .s-jobs th{background:#f3f4f6;text-align:center}
+  .s-note{min-height:70px;white-space:pre-wrap}
+  .chk{display:inline-block;width:13px;height:13px;border:1.5px solid #111;border-radius:3px;margin-right:5px;vertical-align:-2px;text-align:center;line-height:11px;font-size:11px}
+  .chk.on{background:#111;color:#fff}
+  .tagline{display:inline-block;margin-right:14px}
+  @media print{
+    body{background:#fff}
+    .topbar,.wrap>.panel:first-child,.no-print{display:none!important}
+    .wrap{display:block;padding:0}
+    .section-card{position:static}
+    .sheet{border:0;width:auto;min-height:auto;padding:10mm}
+    @page{size:A4;margin:0}
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">PLOY<br>GARMENT</div>
+  <div>
+    <div class="title">ระบบสร้างใบสั่งผลิต / ใบกำหนดงานปัก-สกรีน</div>
+    <div class="sub">วางรูป + วางข้อความจากหน้าร้าน → ได้ใบงานพร้อมพิมพ์ทันที</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="btnPrint">🖨 พิมพ์ / บันทึก PDF</button>
+</div>
+<div class="wrap">
+  <div class="panel section-card">
+    <h2><span class="num">1</span> รูปออเดอร์ &amp; ข้อความจากหน้าร้าน</h2>
+    <label class="fld">รูปแบบเสื้อ / ตัวอย่างงาน (อัปโหลดหรือวาง Ctrl+V)</label>
+    <div class="drop" id="drop">
+      <div id="dropText">📷 คลิกเพื่อเลือกรูป หรือ ลาก/วางรูปที่นี่</div>
+      <input type="file" id="fileImg" accept="image/*" hidden>
+    </div>
+    <label class="fld">ข้อความรายละเอียดออเดอร์ (วางจากแชทหน้าร้าน)</label>
+    <textarea id="rawText" rows="8" placeholder="ตัวอย่าง:&#10;ออเดอร์ Rendy&#10;เสื้อยืดคอกลม cotton100 สีดำ&#10;สกรีนDFT ด้านหน้า ขนาด 5.5 นิ้ว&#10;M 8 / L 3 / XL 3 / XXL 1&#10;รวม 15 ตัว&#10;นัดรับ หน้าร้านโบ๊เบ๊ วันที่ 17/06/69"></textarea>
+    <div class="btn-row">
+      <button class="toolbtn" id="btnAI">✨ แปลงด้วย AI</button>
+      <button class="toolbtn sec" id="btnRule">⚡ แปลงเร็ว (ออฟไลน์)</button>
+      <button class="toolbtn sec" id="btnClear">ล้างฟอร์ม</button>
+    </div>
+    <div class="hint" id="parseHint">ปุ่ม “แปลงด้วย AI” ใช้ได้ทันทีในหน้านี้ (ไม่ต้องตั้งค่า) — แม่นกับข้อความแปลกๆ / ปุ่ม “แปลงเร็ว” ทำงานออฟไลน์</div>
+    <h2 style="margin-top:18px"><span class="num">2</span> รายละเอียดสินค้า</h2>
+    <label class="fld">ประเภทสินค้า</label>
+    <div class="pill-group" id="ptypeGroup">
+      <label class="pill active"><input type="radio" name="ptype" value="tshirt" checked>เสื้อยืด</label>
+      <label class="pill"><input type="radio" name="ptype" value="polo">เสื้อโปโล</label>
+      <label class="pill"><input type="radio" name="ptype" value="sub">Sublimation</label>
+    </div>
+    <div class="row">
+      <div><label class="fld">ชื่อออเดอร์ / ลูกค้า</label><input type="text" id="f_order"></div>
+      <div><label class="fld">เลขที่งาน (PO)</label><input type="text" id="f_po"></div>
+    </div>
+    <div class="row">
+      <div><label class="fld">วันที่</label><input type="text" id="f_date" placeholder="วว/ดด/ปป"></div>
+      <div><label class="fld">กำหนดส่ง / นัดรับ</label><input type="text" id="f_due" placeholder="เช่น 17/06/69"></div>
+    </div>
+    <label class="fld">สถานที่รับ / จัดส่ง</label>
+    <input type="text" id="f_place" placeholder="เช่น หน้าร้านโบ๊เบ๊">
+    <div class="row">
+      <div><label class="fld">เนื้อผ้า</label><input type="text" id="f_fabric" placeholder="เช่น Cotton 100, TK Micro, TC, CVC"></div>
+      <div><label class="fld">สีผ้า</label><input type="text" id="f_color" placeholder="เช่น ดำ, ขาว"></div>
+    </div>
+    <div class="ptype-fields" data-for="tshirt">
+      <label class="fld">การตัดเย็บ</label>
+      <div class="pill-group" data-single="cut">
+        <label class="pill"><input type="checkbox" value="ตัดใหม่">ตัดใหม่</label>
+        <label class="pill"><input type="checkbox" value="ตัวสำเร็จ">ตัวสำเร็จ</label>
+      </div>
+      <label class="fld">เทคนิคการสกรีน</label>
+      <div class="pill-group" data-multi="tech_t">
+        <label class="pill"><input type="checkbox" value="สกรีนบล็อค">สกรีนบล็อค</label>
+        <label class="pill"><input type="checkbox" value="DFT">DFT</label>
+        <label class="pill"><input type="checkbox" value="ปัก">ปัก</label>
+        <label class="pill"><input type="checkbox" value="อื่นๆ">อื่นๆ</label>
+      </div>
+    </div>
+    <div class="ptype-fields" data-for="polo" style="display:none">
+      <label class="fld">สาป (Placket)</label>
+      <div class="pill-group" data-single="placket">
+        <label class="pill"><input type="checkbox" value="สาปโชว์">สาปโชว์</label>
+        <label class="pill"><input type="checkbox" value="สาปแลป">สาปแลป</label>
+        <label class="pill"><input type="checkbox" value="สาปในตัว">สาปในตัว</label>
+      </div>
+      <label class="fld">แขน (Sleeve)</label>
+      <div class="pill-group" data-single="sleeve_p">
+        <label class="pill"><input type="checkbox" value="แขนจั๊ม">แขนจั๊ม</label>
+        <label class="pill"><input type="checkbox" value="แขนจั๊มครึ่ง">แขนจั๊มครึ่ง</label>
+        <label class="pill"><input type="checkbox" value="แขนลา">แขนลา</label>
+      </div>
+      <label class="fld">เทคนิค</label>
+      <div class="pill-group" data-multi="tech_p">
+        <label class="pill"><input type="checkbox" value="สกรีนบล็อค">สกรีนบล็อค</label>
+        <label class="pill"><input type="checkbox" value="DFT">DFT</label>
+        <label class="pill"><input type="checkbox" value="ปัก">ปัก</label>
+      </div>
+    </div>
+    <div class="ptype-fields" data-for="sub" style="display:none">
+      <label class="fld">ประเภทเสื้อ</label>
+      <div class="pill-group" data-single="subtype">
+        <label class="pill"><input type="checkbox" value="คอกลม">คอกลม</label>
+        <label class="pill"><input type="checkbox" value="คอวี">คอวี</label>
+        <label class="pill"><input type="checkbox" value="คอวีปก">คอวีปก</label>
+        <label class="pill"><input type="checkbox" value="โปโล">โปโล</label>
+      </div>
+      <label class="fld">ปก (Collar)</label>
+      <div class="pill-group" data-single="collar">
+        <label class="pill"><input type="checkbox" value="ทอ">ทอ</label>
+        <label class="pill"><input type="checkbox" value="บุ้ง">บุ้ง</label>
+      </div>
+      <label class="fld">แขน (Sleeve)</label>
+      <div class="pill-group" data-single="sleeve_s">
+        <label class="pill"><input type="checkbox" value="แขนลา">แขนลา</label>
+        <label class="pill"><input type="checkbox" value="แขนแลป(ผ้า)">แขนแลป (ผ้า)</label>
+        <label class="pill"><input type="checkbox" value="แขนแลป(บุ้ง)">แขนแลป (บุ้ง)</label>
+      </div>
+    </div>
+    <h2 style="margin-top:18px"><span class="num">3</span> จุดงานสกรีน/ปัก (Artwork)</h2>
+    <div id="jobs"></div>
+    <div class="btn-row"><button class="mini" id="addJob">+ เพิ่มจุดงาน</button></div>
+    <h2 style="margin-top:18px"><span class="num">4</span> จำนวนผลิต</h2>
+    <div id="qtyBlocks"></div>
+    <div class="btn-row"><button class="mini" id="addQtyRow">+ เพิ่มแถว (รุ่น/ผ้า/สี)</button></div>
+    <label class="fld">หมายเหตุ</label>
+    <textarea id="f_note" rows="3"></textarea>
+  </div>
+  <div>
+    <div class="sheetwrap"><div class="sheet" id="sheet"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+const SIZES=["XS","S","M","L","XL","2XL","3XL","4XL","5XL"];
+let imgData=null;
+const state={jobs:[],qty:[]};
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
+function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function initPills(){
+  $$(".pill input").forEach(inp=>{
+    inp.addEventListener("change",()=>{
+      const grp=inp.closest(".pill-group");
+      if(grp.dataset.single!==undefined){grp.querySelectorAll("input").forEach(o=>{if(o!==inp)o.checked=false;});}
+      grp.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active",p.querySelector("input").checked));
+      render();
+    });
+  });
+}
+function getSingle(k){const i=$('[data-single="'+k+'"] input:checked');return i?i.value:"";}
+function getMulti(k){return $$('[data-multi="'+k+'"] input:checked').map(i=>i.value);}
+function setSingle(k,v){const g=$('[data-single="'+k+'"]');if(!g||!v)return;g.querySelectorAll("input").forEach(i=>{i.checked=(i.value===v);i.closest(".pill").classList.toggle("active",i.checked);});}
+function setMulti(k,a){const g=$('[data-multi="'+k+'"]');if(!g)return;g.querySelectorAll("input").forEach(i=>{i.checked=a.includes(i.value);i.closest(".pill").classList.toggle("active",i.checked);});}
+function currentType(){return ($("input[name=ptype]:checked")||{}).value||"tshirt";}
+$$("input[name=ptype]").forEach(r=>r.addEventListener("change",()=>{
+  const t=currentType();
+  $$(".ptype-fields").forEach(d=>d.style.display=(d.dataset.for===t?"":"none"));
+  $$("#ptypeGroup .pill").forEach(p=>p.classList.toggle("active",p.querySelector("input").checked));
+  render();
+}));
+const drop=$("#drop"),fileImg=$("#fileImg");
+drop.addEventListener("click",()=>fileImg.click());
+fileImg.addEventListener("change",e=>{if(e.target.files[0])loadImg(e.target.files[0]);});
+drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("drag");});
+drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));
+drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("drag");if(e.dataTransfer.files[0])loadImg(e.dataTransfer.files[0]);});
+window.addEventListener("paste",e=>{for(const it of (e.clipboardData||{}).items||[]){if(it.type.startsWith("image/")){loadImg(it.getAsFile());e.preventDefault();return;}}});
+function loadImg(file){const r=new FileReader();r.onload=()=>{imgData=r.result;$("#dropText").innerHTML='เปลี่ยนรูป<br><img src="'+imgData+'">';render();};r.readAsDataURL(file);}
+function addJob(d){d=d||{};state.jobs.push(Object.assign({pos:"",tech:"",size:"",color:"",note:""},d));renderJobs();render();}
+function renderJobs(){
+  const box=$("#jobs");box.innerHTML="";
+  state.jobs.forEach((j,i)=>{
+    const el=document.createElement("div");el.className="job";
+    el.innerHTML='<div class="jhead"><b>จุดที่ '+(i+1)+'</b><button class="x">ลบ</button></div>'+
+      '<div class="row"><div><label class="fld">ตำแหน่ง</label><input type="text" data-f="pos" placeholder="อกซ้าย/อกขวา/กลางอก/หลัง/แขน"></div>'+
+      '<div><label class="fld">เทคนิค</label><input type="text" data-f="tech" placeholder="DFT/สกรีนบล็อค/ปัก"></div></div>'+
+      '<div class="row"><div><label class="fld">ขนาดงาน</label><input type="text" data-f="size" placeholder="เช่น 5.5 นิ้ว / 12 cm / A4"></div>'+
+      '<div><label class="fld">สีงาน</label><input type="text" data-f="color" placeholder="เช่น เหลือง #ffde59 / ขาว"></div></div>'+
+      '<label class="fld">รายละเอียด/หมายเหตุ</label><input type="text" data-f="note">';
+    el.querySelectorAll("[data-f]").forEach(inp=>{inp.value=j[inp.dataset.f]||"";inp.addEventListener("input",()=>{j[inp.dataset.f]=inp.value;render();});});
+    el.querySelector(".x").addEventListener("click",()=>{state.jobs.splice(i,1);renderJobs();render();});
+    box.appendChild(el);
+  });
+}
+function addQtyRow(d){d=d||{};state.qty.push(Object.assign({label:"",vals:{}},JSON.parse(JSON.stringify(d))));renderQty();render();}
+function renderQty(){
+  const box=$("#qtyBlocks");box.innerHTML="";
+  const tbl=document.createElement("table");tbl.className="qty-table";
+  tbl.innerHTML="<tr><th>รุ่น/ผ้า/สี</th>"+SIZES.map(s=>"<th>"+s+"</th>").join("")+"<th>รวม</th><th></th></tr>";
+  state.qty.forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    let cells='<td class="lbl"><input type="text" data-k="label" placeholder="(ไม่บังคับ)"></td>';
+    SIZES.forEach(s=>cells+='<td><input type="text" inputmode="numeric" data-s="'+s+'"></td>');
+    let tot=Object.values(r.vals).reduce((a,b)=>a+(parseInt(b)||0),0);
+    cells+='<td><b class="rowtot">'+(tot||"")+'</b></td><td><button class="mini" data-del="1">✕</button></td>';
+    tr.innerHTML=cells;
+    tr.querySelector('[data-k="label"]').value=r.label||"";
+    SIZES.forEach(s=>{tr.querySelector('[data-s="'+s+'"]').value=r.vals[s]||"";});
+    tr.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",()=>{
+      if(inp.dataset.k==="label")r.label=inp.value;else r.vals[inp.dataset.s]=inp.value;
+      let t=Object.values(r.vals).reduce((a,b)=>a+(parseInt(b)||0),0);
+      tr.querySelector(".rowtot").textContent=t||"";render();
+    }));
+    tr.querySelector("[data-del]").addEventListener("click",()=>{state.qty.splice(i,1);renderQty();render();});
+    tbl.appendChild(tr);
+  });
+  box.appendChild(tbl);
+}
+function grandTotal(){return state.qty.reduce((s,r)=>s+Object.values(r.vals).reduce((a,b)=>a+(parseInt(b)||0),0),0);}
+function chk(on){return '<span class="chk '+(on?'on':'')+'">'+(on?'✓':'')+'</span>';}
+function detailRows(){
+  const t=currentType();let rows=[];
+  rows.push(["เนื้อผ้า (Fabric)",$("#f_fabric").value]);
+  rows.push(["สีผ้า (Color)",$("#f_color").value]);
+  if(t==="tshirt"){rows.push(["การตัดเย็บ",getSingle("cut")]);rows.push(["เทคนิค",getMulti("tech_t").join(", ")]);}
+  else if(t==="polo"){rows.push(["สาป (Placket)",getSingle("placket")]);rows.push(["แขน (Sleeve)",getSingle("sleeve_p")]);rows.push(["เทคนิค",getMulti("tech_p").join(", ")]);}
+  else{rows.push(["ประเภทเสื้อ",getSingle("subtype")]);rows.push(["ปก (Collar)",getSingle("collar")]);rows.push(["แขน (Sleeve)",getSingle("sleeve_s")]);}
+  return rows.filter(r=>r[1]);
+}
+function render(){
+  const s=$("#sheet");
+  const order=$("#f_order").value,po=$("#f_po").value,date=$("#f_date").value,due=$("#f_due").value,place=$("#f_place").value,note=$("#f_note").value;
+  const dr=detailRows();
+  const usedSizes=SIZES.filter(sz=>state.qty.some(r=>parseInt(r.vals[sz])>0));
+  const cols=usedSizes.length?usedSizes:["XS","S","M","L","XL","2XL"];
+  let qtyHTML='<table class="s-qty"><tr><th>Size</th>'+cols.map(c=>"<th>"+c+"</th>").join("")+"<th>รวม</th></tr>";
+  const visRows=state.qty.filter(r=>Object.values(r.vals).some(v=>parseInt(v)>0)||r.label);
+  (visRows.length?visRows:[{label:"",vals:{}}]).forEach(r=>{
+    let tot=Object.values(r.vals).reduce((a,b)=>a+(parseInt(b)||0),0);
+    qtyHTML+='<tr><td style="text-align:left">'+(esc(r.label)||"จำนวน (Pcs.)")+'</td>'+cols.map(c=>"<td>"+(r.vals[c]||"")+"</td>").join("")+"<td><b>"+(tot||"")+"</b></td></tr>";
+  });
+  qtyHTML+="</table>";
+  const gtot=grandTotal();
+  let jobsHTML="";
+  const vj=state.jobs.filter(j=>j.pos||j.tech||j.size||j.color||j.note);
+  if(vj.length){
+    jobsHTML='<table class="s-jobs"><tr><th style="width:24px">#</th><th>ตำแหน่ง</th><th>เทคนิค</th><th>ขนาด</th><th>สี</th><th>หมายเหตุ</th></tr>'+
+      vj.map((j,i)=>"<tr><td style=\"text-align:center\">"+(i+1)+"</td><td>"+esc(j.pos)+"</td><td>"+esc(j.tech)+"</td><td>"+esc(j.size)+"</td><td>"+esc(j.color)+"</td><td>"+esc(j.note)+"</td></tr>").join("")+"</table>";
+  }else{jobsHTML='<div style="color:#999;padding:6px">— ยังไม่มีจุดงาน —</div>';}
+  s.innerHTML=
+    '<div class="s-head"><div class="s-logo">PLOY<br>GARMENT</div>'+
+    '<div class="s-title"><div class="th">ใบสั่งผลิต <span style="font-size:14px">(PRODUCTION ORDER)</span></div>'+
+    '<div class="en">และใบกำหนดงานปัก / สกรีน (DECORATION SHEET)</div></div>'+
+    '<div class="s-meta"><div><span class="k">เลขที่งาน (PO No.)</span><span class="v">'+esc(po)+'</span></div>'+
+    '<div><span class="k">วันที่ (Date)</span><span class="v">'+esc(date)+'</span></div>'+
+    '<div><span class="k">กำหนดส่ง (Delivery)</span><span class="v">'+esc(due)+'</span></div></div></div>'+
+    '<div class="blk"><div class="blk-h">■ รายละเอียดสินค้า (PRODUCT DETAIL)</div><div class="blk-b">'+
+    '<div class="drow"><span class="dk">ชื่อออเดอร์ / ลูกค้า</span><span class="dc">:</span><b>'+(esc(order)||"-")+'</b></div>'+
+    '<div class="drow"><span class="dk">ประเภทสินค้า (Type)</span><span class="dc">:</span>'+
+    '<span class="tagline">'+chk(currentType()==="tshirt")+'เสื้อยืด</span>'+
+    '<span class="tagline">'+chk(currentType()==="polo")+'โปโล</span>'+
+    '<span class="tagline">'+chk(currentType()==="sub")+'Sublimation</span></div>'+
+    dr.map(r=>'<div class="drow"><span class="dk">'+r[0]+'</span><span class="dc">:</span>'+esc(r[1])+'</div>').join("")+
+    (place?'<div class="drow"><span class="dk">สถานที่รับ/ส่ง</span><span class="dc">:</span>'+esc(place)+'</div>':"")+
+    '</div></div>'+
+    '<div class="blk"><div class="blk-h">■ ตำแหน่งงาน / ตัวอย่างงาน (MOCKUP &amp; ARTWORK)</div><div class="blk-b">'+
+    '<div class="mockimg">'+(imgData?'<img src="'+imgData+'">':"แนบรูปออเดอร์/ตัวอย่างงานที่แผงด้านซ้าย")+'</div></div></div>'+
+    '<div class="blk"><div class="blk-h">■ รายละเอียดงานสกรีน / ปัก (DECORATION)</div><div class="blk-b">'+jobsHTML+'</div></div>'+
+    '<div class="blk"><div class="blk-h">■ จำนวนผลิต (QUANTITY) — รวมทั้งหมด '+gtot+' ตัว</div><div class="blk-b">'+qtyHTML+'</div></div>'+
+    '<div class="blk"><div class="blk-h">■ หมายเหตุ (NOTE)</div><div class="blk-b s-note">'+(esc(note)||"")+'</div></div>';
+}
+function normalizeSize(s){s=s.toUpperCase().replace(/\s/g,"").replace(/[.．]/g,"");if(s==="XXL")return "2XL";if(s==="XXXL")return "3XL";if(s==="XXXXL")return "4XL";if(["XS","S","M","L","XL"].includes(s))return s;if(/^[2-5]XL$/.test(s))return s;return null;}
+function ruleParse(text){
+  const res={order:"",ptype:"",fabric:"",color:"",due:"",place:"",tech:[],size:"",pos:[],sub_color:"",qty:[],note:""};
+  const t=text.replace(/\r/g,"");
+  let m=t.match(/ออเดอร์\s*([^\n]+)/);if(m)res.order=m[1].trim();
+  if(/sublimation|ซับลิ/i.test(t))res.ptype="sub";
+  else if(/โปโล|polo/i.test(t))res.ptype="polo";
+  else if(/เสื้อยืด|คอกลม|คอวี|ยืดคอ/.test(t))res.ptype="tshirt";
+  if(/cotton\s*100|คอตตอน\s*100|cotton100/i.test(t))res.fabric="Cotton 100%";
+  else if(/\bCVC\b/i.test(t))res.fabric="CVC";
+  else if(/\bTC\b/i.test(t))res.fabric="TC";
+  else if(/TK\s*micro/i.test(t))res.fabric="TK Micro";
+  let cm=t.match(/สี(ดำ|ขาว|แดง|น้ำเงิน|เขียว|เทา|เหลือง|ชมพู|ส้ม|ม่วง|กรม|ครีม|กากี)/);if(cm)res.color=cm[1];
+  if(/DFT|ดีเอฟที|dtf/i.test(t))res.tech.push("DFT");
+  if(/บล็อค|บล็อก|block/i.test(t))res.tech.push("สกรีนบล็อค");
+  if(/ปัก|embroider/i.test(t))res.tech.push("ปัก");
+  let sz=t.match(/(?:ขนาด|size)\s*([0-9.]+\s*(?:นิ้ว|cm|ซม\.?))/i)||t.match(/\b(A4|A3)\b/i)||t.match(/([0-9]+\s*[x×]\s*[0-9]+\s*(?:cm|ซม|นิ้ว)?)/i);if(sz)res.size=sz[1].trim();
+  if(/กลางอก/.test(t))res.pos.push("กลางอก");
+  if(/อกขวา/.test(t))res.pos.push("อกขวา");
+  if(/อกซ้าย/.test(t))res.pos.push("อกซ้าย");
+  if(/(ด้านหน้า|หน้าอก)/.test(t)&&!res.pos.length)res.pos.push("ด้านหน้า");
+  if(/(ด้านหลัง|หลัง(?!\s*ร้าน))/.test(t))res.pos.push("ด้านหลัง");
+  if(/แขน/.test(t))res.pos.push("แขน");
+  let cc=t.match(/#([0-9a-fA-F]{6})/);if(cc)res.sub_color="#"+cc[1];
+  let dd=t.match(/(?:นัดรับ|จัดส่ง|กำหนดส่ง|ส่ง|รับ)[^\d\n]*?(\d{1,2}\/\d{1,2}\/\d{2,4})/);if(dd)res.due=dd[1];
+  let pl=t.match(/(?:นัดรับ|จัดส่ง|รับที่|รับ)\s*((?:หน้าร้าน)?[^\d\n]*?)(?:\s*วันที่|\s*\d|$)/);if(pl&&pl[1]&&pl[1].trim().length>1)res.place=pl[1].trim();
+  const qtyRe=/(?:^|[\s(/])(XS|S|M|L|XL|XXL|XXXL|XXXXL|[2-5]\s?XL)\s*[=:\-xX]?\s*(\d{1,3})\b/gi;
+  const blocks=t.split(/\n\s*\n/);let any=false;
+  blocks.forEach(blk=>{
+    const vals={};let found=false;let mm;qtyRe.lastIndex=0;
+    while((mm=qtyRe.exec(blk))){const ns=normalizeSize(mm[1]);if(ns){vals[ns]=parseInt(mm[2]);found=true;}}
+    if(found){let lbl="";const lm=blk.match(/คอกลม\s*(TC|CVC|COTTON\s*100|COTTON100|cotton100)/i);if(lm)lbl=lm[0].replace(/\s+/g," ").trim();res.qty.push({label:lbl,vals});any=true;}
+  });
+  if(!any){const vals={};let mm;qtyRe.lastIndex=0;while((mm=qtyRe.exec(t))){const ns=normalizeSize(mm[1]);if(ns)vals[ns]=parseInt(mm[2]);}if(Object.keys(vals).length)res.qty.push({label:"",vals});}
+  return res;
+}
+function applyParsed(p){
+  if(p.ptype){const r=document.querySelector('input[name=ptype][value="'+p.ptype+'"]');if(r){r.checked=true;r.dispatchEvent(new Event("change"));}}
+  if(p.order)$("#f_order").value=p.order;
+  if(p.fabric)$("#f_fabric").value=p.fabric;
+  if(p.color)$("#f_color").value=p.color;
+  if(p.due)$("#f_due").value=p.due;
+  if(p.place)$("#f_place").value=p.place;
+  const t=currentType();
+  if(p.tech&&p.tech.length){
+    if(t==="tshirt")setMulti("tech_t",p.tech.filter(x=>["สกรีนบล็อค","DFT","ปัก","อื่นๆ"].includes(x)));
+    else if(t==="polo")setMulti("tech_p",p.tech.filter(x=>["สกรีนบล็อค","DFT","ปัก"].includes(x)));
+  }
+  if(p.subtype)setSingle("subtype",p.subtype);
+  if(p.collar)setSingle("collar",p.collar);
+  if(p.sleeve){if(t==="polo")setSingle("sleeve_p",p.sleeve);else if(t==="sub")setSingle("sleeve_s",p.sleeve);}
+  if(p.placket)setSingle("placket",p.placket);
+  if(p.cut)setSingle("cut",p.cut);
+  state.jobs=[];
+  const positions=(p.pos&&p.pos.length)?p.pos:[];
+  const techStr=(p.tech||[]).join(", ");
+  if(positions.length){positions.forEach(pos=>state.jobs.push({pos:pos,tech:techStr,size:p.size||"",color:p.sub_color||"",note:""}));}
+  else if(techStr||p.size||p.sub_color){state.jobs.push({pos:"",tech:techStr,size:p.size||"",color:p.sub_color||"",note:""});}
+  if(!state.jobs.length)state.jobs.push({pos:"",tech:"",size:"",color:"",note:""});
+  renderJobs();
+  state.qty=(p.qty&&p.qty.length)?p.qty.map(q=>({label:q.label||"",vals:q.vals||{}})):[{label:"",vals:{}}];
+  renderQty();
+  if(p.note)$("#f_note").value=p.note;
+  render();
+}
+async function aiParse(text){
+  if(!(window.cowork&&window.cowork.askClaude)){toast("ต้องเปิดผ่าน Cowork จึงจะใช้ AI ได้ — ใช้ปุ่มแปลงเร็วแทน");return null;}
+  const schema=`{
+ "order":"ชื่อออเดอร์/ลูกค้า",
+ "ptype":"tshirt | polo | sub",
+ "fabric":"เนื้อผ้า เช่น Cotton 100%, TC, CVC, TK Micro",
+ "color":"สีผ้า",
+ "cut":"ตัดใหม่ | ตัวสำเร็จ | '' (เสื้อยืดเท่านั้น)",
+ "placket":"สาปโชว์ | สาปแลป | สาปในตัว (โปโล)",
+ "sleeve":"แขนจั๊ม|แขนจั๊มครึ่ง|แขนลา (โปโล) หรือ แขนลา|แขนแลป(ผ้า)|แขนแลป(บุ้ง) (sub)",
+ "subtype":"คอกลม|คอวี|คอวีปก|โปโล (sub)",
+ "collar":"ทอ|บุ้ง (sub)",
+ "tech":["DFT","สกรีนบล็อค","ปัก"],
+ "size":"ขนาดงาน เช่น 5.5 นิ้ว, 12 cm, A4",
+ "pos":["ตำแหน่ง เช่น อกขวา, กลางอก, ด้านหลัง"],
+ "sub_color":"โค้ดสีงาน เช่น #ffde59",
+ "qty":[{"label":"รุ่น/ผ้า/สี (ว่างได้)","vals":{"M":8,"L":3}}],
+ "note":"หมายเหตุ"
+}`;
+  const prompt=`คุณเป็นผู้ช่วยโรงงานผลิตเสื้อ แปลงข้อความออเดอร์ภาษาไทยต่อไปนี้เป็น JSON ตาม schema นี้เท่านั้น ตอบกลับเป็น JSON ล้วนๆ ไม่ต้องมีคำอธิบายหรือ markdown:
+${schema}
+
+กติกา: ไซส์ XXL=2XL, XXXL=3XL. ถ้ามีหลายรุ่น/หลายผ้า ให้แยกเป็นหลาย object ใน qty พร้อม label เช่น คอกลม TC. ฟิลด์ที่ไม่มีข้อมูลให้เป็นค่าว่าง.
+
+ข้อความออเดอร์:
+${text}`;
+  const hint=$("#parseHint");const old=hint.textContent;hint.innerHTML='<span class="spin"></span>กำลังประมวลผลด้วย AI...';
+  try{
+    const out=await window.cowork.askClaude(prompt,[]);
+    let txt=typeof out==="string"?out:(out&&(out.text||out.content||out.result)||JSON.stringify(out));
+    txt=String(txt).replace(/```json|```/g,"").trim();
+    const js=txt.slice(txt.indexOf("{"),txt.lastIndexOf("}")+1);
+    return JSON.parse(js);
+  }catch(err){toast("AI ผิดพลาด: "+(err.message||err)+" — ใช้ตัวแปลงเร็วแทน");return null;}
+  finally{hint.textContent=old;}
+}
+$("#btnRule").addEventListener("click",()=>{const txt=$("#rawText").value.trim();if(!txt){toast("วางข้อความก่อน");return;}applyParsed(ruleParse(txt));toast("แปลงด้วยตัวแปลงเร็วแล้ว ✓ ตรวจทานก่อนพิมพ์");});
+$("#btnAI").addEventListener("click",async()=>{const txt=$("#rawText").value.trim();if(!txt){toast("วางข้อความก่อน");return;}const p=await aiParse(txt);if(p){applyParsed(p);toast("แปลงด้วย AI แล้ว ✓ ตรวจทานก่อนพิมพ์");}else{applyParsed(ruleParse(txt));}});
+$("#btnClear").addEventListener("click",()=>{
+  $$("#f_order,#f_po,#f_date,#f_due,#f_place,#f_fabric,#f_color,#f_note").forEach(i=>i.value="");
+  $$(".pill input").forEach(i=>{i.checked=false;i.closest(".pill").classList.remove("active");});
+  document.querySelector('input[name=ptype][value="tshirt"]').checked=true;
+  document.querySelector('input[name=ptype][value="tshirt"]').dispatchEvent(new Event("change"));
+  state.jobs=[];state.qty=[];addJob();addQtyRow();imgData=null;
+  $("#dropText").textContent="📷 คลิกเพื่อเลือกรูป หรือ ลาก/วางรูปที่นี่";render();toast("ล้างฟอร์มแล้ว");
+});
+$("#btnPrint").addEventListener("click",()=>window.print());
+$("#addJob").addEventListener("click",()=>addJob());
+$("#addQtyRow").addEventListener("click",()=>addQtyRow());
+function openSettings(){}
+$$("#f_order,#f_po,#f_date,#f_due,#f_place,#f_fabric,#f_color,#f_note").forEach(i=>i.addEventListener("input",render));
+initPills();addJob();addQtyRow();render();
+</script>
+</body>
+</html>
